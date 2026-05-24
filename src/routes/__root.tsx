@@ -81,6 +81,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "FitMatch — найди личного фитнес-тренера" },
+      { name: "twitter:description", content: "Маркетплейс тренеров и онлайн-бронирование персональных тренировок." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/df4ae05f-02ce-4933-950d-078ad86495b8/id-preview-08b43b30--6644baa9-0f31-4b1f-b9a9-249c011c3188.lovable.app-1779591602191.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/df4ae05f-02ce-4933-950d-078ad86495b8/id-preview-08b43b30--6644baa9-0f31-4b1f-b9a9-249c011c3188.lovable.app-1779591602191.png" },
     ],
     links: [
       {
