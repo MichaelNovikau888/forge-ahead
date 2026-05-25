@@ -9,6 +9,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { Eye, EyeOff } from "lucide-react";
+
+function PasswordInput({ id, name, minLength }: { id: string; name: string; minLength?: number }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <Input id={id} name={name} type={show ? "text" : "password"} minLength={minLength} required className="pr-10" />
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        aria-label={show ? "Скрыть пароль" : "Показать пароль"}
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -98,7 +116,7 @@ function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Пароль</Label>
-                  <Input id="signin-password" name="password" type="password" required />
+                  <PasswordInput id="signin-password" name="password" />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>Войти</Button>
               </form>
@@ -115,7 +133,7 @@ function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-password">Пароль</Label>
-                  <Input id="su-password" name="password" type="password" minLength={6} required />
+                  <PasswordInput id="su-password" name="password" minLength={6} />
                 </div>
                 <div className="space-y-2">
                   <Label>Я регистрируюсь как</Label>
