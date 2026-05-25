@@ -18,6 +18,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBookingRouteImport } from './routes/_authenticated/booking'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedTrainerServicesRouteImport } from './routes/_authenticated/trainer.services'
+import { Route as AuthenticatedTrainerScheduleRouteImport } from './routes/_authenticated/trainer.schedule'
 
 const TrainersRoute = TrainersRouteImport.update({
   id: '/trainers',
@@ -64,6 +65,12 @@ const AuthenticatedTrainerServicesRoute =
     path: '/services',
     getParentRoute: () => AuthenticatedTrainerRoute,
   } as any)
+const AuthenticatedTrainerScheduleRoute =
+  AuthenticatedTrainerScheduleRouteImport.update({
+    id: '/schedule',
+    path: '/schedule',
+    getParentRoute: () => AuthenticatedTrainerRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRoutesByTo {
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRoutesById {
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/booking': typeof AuthenticatedBookingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/_authenticated/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/_authenticated/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/booking'
     | '/dashboard'
     | '/trainer'
+    | '/trainer/schedule'
     | '/trainer/services'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/booking'
     | '/dashboard'
     | '/trainer'
+    | '/trainer/schedule'
     | '/trainer/services'
   id:
     | '__root__'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/booking'
     | '/_authenticated/dashboard'
     | '/_authenticated/trainer'
+    | '/_authenticated/trainer/schedule'
     | '/_authenticated/trainer/services'
   fileRoutesById: FileRoutesById
 }
@@ -203,14 +216,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrainerServicesRouteImport
       parentRoute: typeof AuthenticatedTrainerRoute
     }
+    '/_authenticated/trainer/schedule': {
+      id: '/_authenticated/trainer/schedule'
+      path: '/schedule'
+      fullPath: '/trainer/schedule'
+      preLoaderRoute: typeof AuthenticatedTrainerScheduleRouteImport
+      parentRoute: typeof AuthenticatedTrainerRoute
+    }
   }
 }
 
 interface AuthenticatedTrainerRouteChildren {
+  AuthenticatedTrainerScheduleRoute: typeof AuthenticatedTrainerScheduleRoute
   AuthenticatedTrainerServicesRoute: typeof AuthenticatedTrainerServicesRoute
 }
 
 const AuthenticatedTrainerRouteChildren: AuthenticatedTrainerRouteChildren = {
+  AuthenticatedTrainerScheduleRoute: AuthenticatedTrainerScheduleRoute,
   AuthenticatedTrainerServicesRoute: AuthenticatedTrainerServicesRoute,
 }
 
