@@ -17,6 +17,8 @@ import { Route as AuthenticatedTrainerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookingRouteImport } from './routes/_authenticated/booking'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedTrainerServicesRouteImport } from './routes/_authenticated/trainer.services'
+import { Route as AuthenticatedTrainerScheduleRouteImport } from './routes/_authenticated/trainer.schedule'
 
 const TrainersRoute = TrainersRouteImport.update({
   id: '/trainers',
@@ -57,6 +59,18 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTrainerServicesRoute =
+  AuthenticatedTrainerServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedTrainerRoute,
+  } as any)
+const AuthenticatedTrainerScheduleRoute =
+  AuthenticatedTrainerScheduleRouteImport.update({
+    id: '/schedule',
+    path: '/schedule',
+    getParentRoute: () => AuthenticatedTrainerRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,7 +79,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/trainer': typeof AuthenticatedTrainerRoute
+  '/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
+  '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -74,7 +90,9 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/trainer': typeof AuthenticatedTrainerRoute
+  '/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
+  '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,7 +103,9 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/booking': typeof AuthenticatedBookingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/trainer': typeof AuthenticatedTrainerRoute
+  '/_authenticated/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/_authenticated/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
+  '/_authenticated/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +117,8 @@ export interface FileRouteTypes {
     | '/booking'
     | '/dashboard'
     | '/trainer'
+    | '/trainer/schedule'
+    | '/trainer/services'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +128,8 @@ export interface FileRouteTypes {
     | '/booking'
     | '/dashboard'
     | '/trainer'
+    | '/trainer/schedule'
+    | '/trainer/services'
   id:
     | '__root__'
     | '/'
@@ -116,6 +140,8 @@ export interface FileRouteTypes {
     | '/_authenticated/booking'
     | '/_authenticated/dashboard'
     | '/_authenticated/trainer'
+    | '/_authenticated/trainer/schedule'
+    | '/_authenticated/trainer/services'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -183,21 +209,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/trainer/services': {
+      id: '/_authenticated/trainer/services'
+      path: '/services'
+      fullPath: '/trainer/services'
+      preLoaderRoute: typeof AuthenticatedTrainerServicesRouteImport
+      parentRoute: typeof AuthenticatedTrainerRoute
+    }
+    '/_authenticated/trainer/schedule': {
+      id: '/_authenticated/trainer/schedule'
+      path: '/schedule'
+      fullPath: '/trainer/schedule'
+      preLoaderRoute: typeof AuthenticatedTrainerScheduleRouteImport
+      parentRoute: typeof AuthenticatedTrainerRoute
+    }
   }
 }
+
+interface AuthenticatedTrainerRouteChildren {
+  AuthenticatedTrainerScheduleRoute: typeof AuthenticatedTrainerScheduleRoute
+  AuthenticatedTrainerServicesRoute: typeof AuthenticatedTrainerServicesRoute
+}
+
+const AuthenticatedTrainerRouteChildren: AuthenticatedTrainerRouteChildren = {
+  AuthenticatedTrainerScheduleRoute: AuthenticatedTrainerScheduleRoute,
+  AuthenticatedTrainerServicesRoute: AuthenticatedTrainerServicesRoute,
+}
+
+const AuthenticatedTrainerRouteWithChildren =
+  AuthenticatedTrainerRoute._addFileChildren(AuthenticatedTrainerRouteChildren)
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBookingRoute: typeof AuthenticatedBookingRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedTrainerRoute: typeof AuthenticatedTrainerRoute
+  AuthenticatedTrainerRoute: typeof AuthenticatedTrainerRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBookingRoute: AuthenticatedBookingRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedTrainerRoute: AuthenticatedTrainerRoute,
+  AuthenticatedTrainerRoute: AuthenticatedTrainerRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -213,13 +266,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability_slots: {
+        Row: {
+          created_at: string
+          end_at: string
+          id: string
+          is_booked: boolean
+          start_at: string
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_at: string
+          id?: string
+          is_booked?: boolean
+          start_at: string
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string
+          end_at?: string
+          id?: string
+          is_booked?: boolean
+          start_at?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_slots_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           client_id: string
@@ -22,6 +57,7 @@ export type Database = {
           notes: string | null
           scheduled_at: string
           service_id: string | null
+          slot_id: string | null
           status: Database["public"]["Enums"]["booking_status"]
           trainer_id: string
         }
@@ -32,6 +68,7 @@ export type Database = {
           notes?: string | null
           scheduled_at: string
           service_id?: string | null
+          slot_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           trainer_id: string
         }
@@ -42,6 +79,7 @@ export type Database = {
           notes?: string | null
           scheduled_at?: string
           service_id?: string | null
+          slot_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           trainer_id?: string
         }
@@ -51,6 +89,13 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "availability_slots"
             referencedColumns: ["id"]
           },
           {
