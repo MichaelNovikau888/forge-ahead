@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { trainerBookingsQuery } from "@/lib/queries";
@@ -35,6 +35,10 @@ function TrainerDashboard() {
       <div>
         <h1 className="text-3xl font-bold">Кабинет тренера</h1>
         <p className="text-muted-foreground">Заявки клиентов и расписание.</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Link to="/trainer/services"><Button variant="outline">Мои услуги</Button></Link>
+        <Link to="/trainer/schedule"><Button variant="outline">Расписание</Button></Link>
       </div>
       <Card>
         <CardHeader><CardTitle>Заявки клиентов</CardTitle></CardHeader>
