@@ -74,24 +74,15 @@ function AuthPage() {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { full_name: fullName },
+        data: { full_name: fullName, role },
       },
     });
     if (error) {
       setLoading(false);
       return toast.error(error.message);
     }
-    // If trainer role requested, add it (default 'client' is created by trigger)
-    if (role === "trainer" && data.user) {
-      await supabase.from("user_roles").insert({ user_id: data.user.id, role: "trainer" });
-      await supabase.from("trainers").insert({
-        user_id: data.user.id,
-        specialization: "Персональный тренинг",
-        is_approved: false,
-      });
-    }
     setLoading(false);
-    toast.success("Аккаунт создан! Проверь почту, если требуется подтверждение.");
+    toast.success("Аккаунт создан!");
     navigate({ to: role === "trainer" ? "/trainer" : "/dashboard" });
   };
 
