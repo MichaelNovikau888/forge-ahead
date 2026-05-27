@@ -42,6 +42,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState<"client" | "trainer">("client");
 
   if (user) {
     navigate({ to: "/dashboard" });
@@ -68,7 +69,6 @@ function AuthPage() {
     const email = String(fd.get("email"));
     const password = String(fd.get("password"));
     const fullName = String(fd.get("full_name"));
-    const role = String(fd.get("role"));
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -128,7 +128,7 @@ function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Я регистрируюсь как</Label>
-                  <RadioGroup name="role" defaultValue="client" className="flex gap-4">
+                  <RadioGroup name="role" value={role} onValueChange={(v) => setRole(v as "client" | "trainer")} className="flex gap-4">
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="client" id="r-client" />
                       <Label htmlFor="r-client" className="font-normal">Клиент</Label>
@@ -138,6 +138,7 @@ function AuthPage() {
                       <Label htmlFor="r-trainer" className="font-normal">Тренер</Label>
                     </div>
                   </RadioGroup>
+                  <p className="text-xs text-muted-foreground">Выбрано: <span className="font-medium">{role === "trainer" ? "Тренер" : "Клиент"}</span></p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>Создать аккаунт</Button>
               </form>
