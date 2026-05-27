@@ -51,10 +51,13 @@ export type Database = {
       }
       bookings: {
         Row: {
+          amount: number
           client_id: string
           created_at: string
           id: string
+          meeting_url: string | null
           notes: string | null
+          payment_status: string
           scheduled_at: string
           service_id: string | null
           slot_id: string | null
@@ -62,10 +65,13 @@ export type Database = {
           trainer_id: string
         }
         Insert: {
+          amount?: number
           client_id: string
           created_at?: string
           id?: string
+          meeting_url?: string | null
           notes?: string | null
+          payment_status?: string
           scheduled_at: string
           service_id?: string | null
           slot_id?: string | null
@@ -73,10 +79,13 @@ export type Database = {
           trainer_id: string
         }
         Update: {
+          amount?: number
           client_id?: string
           created_at?: string
           id?: string
+          meeting_url?: string | null
           notes?: string | null
+          payment_status?: string
           scheduled_at?: string
           service_id?: string | null
           slot_id?: string | null
