@@ -13,6 +13,7 @@ import { Route as TrainersRouteImport } from './routes/trainers'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TrainersIdRouteImport } from './routes/trainers.$id'
 import { Route as AuthenticatedTrainerRouteImport } from './routes/_authenticated/trainer'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookingRouteImport } from './routes/_authenticated/booking'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TrainersIdRoute = TrainersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TrainersRoute,
 } as any)
 const AuthenticatedTrainerRoute = AuthenticatedTrainerRouteImport.update({
   id: '/trainer',
@@ -75,22 +81,24 @@ const AuthenticatedTrainerScheduleRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/trainers': typeof TrainersRoute
+  '/trainers': typeof TrainersRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/trainers/$id': typeof TrainersIdRoute
   '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/trainers': typeof TrainersRoute
+  '/trainers': typeof TrainersRouteWithChildren
   '/admin': typeof AuthenticatedAdminRoute
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/trainers/$id': typeof TrainersIdRoute
   '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
@@ -99,11 +107,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
-  '/trainers': typeof TrainersRoute
+  '/trainers': typeof TrainersRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/booking': typeof AuthenticatedBookingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/trainer': typeof AuthenticatedTrainerRouteWithChildren
+  '/trainers/$id': typeof TrainersIdRoute
   '/_authenticated/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/_authenticated/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/booking'
     | '/dashboard'
     | '/trainer'
+    | '/trainers/$id'
     | '/trainer/schedule'
     | '/trainer/services'
   fileRoutesByTo: FileRoutesByTo
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/booking'
     | '/dashboard'
     | '/trainer'
+    | '/trainers/$id'
     | '/trainer/schedule'
     | '/trainer/services'
   id:
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/_authenticated/booking'
     | '/_authenticated/dashboard'
     | '/_authenticated/trainer'
+    | '/trainers/$id'
     | '/_authenticated/trainer/schedule'
     | '/_authenticated/trainer/services'
   fileRoutesById: FileRoutesById
@@ -148,7 +160,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
-  TrainersRoute: typeof TrainersRoute
+  TrainersRoute: typeof TrainersRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -180,6 +192,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/trainers/$id': {
+      id: '/trainers/$id'
+      path: '/$id'
+      fullPath: '/trainers/$id'
+      preLoaderRoute: typeof TrainersIdRouteImport
+      parentRoute: typeof TrainersRoute
     }
     '/_authenticated/trainer': {
       id: '/_authenticated/trainer'
@@ -257,11 +276,23 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface TrainersRouteChildren {
+  TrainersIdRoute: typeof TrainersIdRoute
+}
+
+const TrainersRouteChildren: TrainersRouteChildren = {
+  TrainersIdRoute: TrainersIdRoute,
+}
+
+const TrainersRouteWithChildren = TrainersRoute._addFileChildren(
+  TrainersRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
-  TrainersRoute: TrainersRoute,
+  TrainersRoute: TrainersRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
