@@ -32,7 +32,7 @@ export const myBookingsQuery = (userId: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("id, scheduled_at, status, notes, trainer_id, profiles:trainer_id(full_name)")
+        .select("id, scheduled_at, status, notes, trainer_id, amount, payment_status, meeting_url, profiles:trainer_id(full_name)")
         .eq("client_id", userId)
         .order("scheduled_at", { ascending: false });
       if (error) throw error;
