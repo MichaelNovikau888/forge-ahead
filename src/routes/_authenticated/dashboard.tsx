@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
-import { myBookingsQuery } from "@/lib/queries";
+import { myBookingsQuery, trainersQuery } from "@/lib/queries";
 import { createMeetingForBooking } from "@/lib/daily.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function ClientDashboard() {
   const { user } = useAuth();
   const { data: bookings } = useQuery({ ...myBookingsQuery(user?.id ?? ""), enabled: !!user });
+  const { data: trainers } = useQuery(trainersQuery);
   const qc = useQueryClient();
   const createMeeting = useServerFn(createMeetingForBooking);
 
@@ -85,11 +86,26 @@ function ClientDashboard() {
   const joinDev = useMutation({
     mutationFn: async (id: string) => {
       const { url } = await createMeeting({ data: { bookingId: id } });
-      const { error } = await supabase
+      return url;
+    },
+    onSuccess: (url) => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      window.open(url, "_blank");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const createDevBooking = useMutation({
+    mutationFn: async (trainerId: string) => {
+      if (!user) throw new Error("Не авторизован");
+      const scheduledAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
         .from("bookings")
-        .update({ meeting_url: url })
-        .eq("id", id);
+        .insert({ client_id: user.id, trainer_id: trainerId, scheduled_at: scheduledAt, status: "pending", payment_status: "unpaid", amount: 0 })
+        .select("id")
+        .single();
       if (error) throw error;
+      const { url } = await createMeeting({ data: { bookingId: data.id } });
       return url;
     },
     onSuccess: (url) => {
@@ -192,6 +208,36 @@ function ClientDashboard() {
                           </Button>
                         )
                       )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Тренеры для теста</CardTitle></CardHeader>
+        <CardContent>
+          {!trainers || trainers.length === 0 ? (
+            <p className="text-muted-foreground">Тренеры пока не найдены.</p>
+          ) : (
+            <ul className="space-y-3">
+              {trainers.map((trainer) => {
+                const trainerProfile = Array.isArray(trainer.profiles) ? trainer.profiles[0] : trainer.profiles;
+                return (
+                  <li key={trainer.user_id} className="flex items-center justify-between gap-3 border-b border-border pb-3 last:border-0">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{trainerProfile?.full_name ?? "Тренер"}</p>
+                      <p className="text-sm text-muted-foreground">{trainer.specialization} · {trainer.price_per_hour} ₽/ч</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link to="/trainers/$id" params={{ id: trainer.user_id }}>
+                        <Button size="sm" variant="outline">Профиль</Button>
+                      </Link>
+                      <Button size="sm" variant="secondary" onClick={() => createDevBooking.mutate(trainer.user_id)} disabled={createDevBooking.isPending}>
+                        <Video className="h-4 w-4 mr-1" /> Подключиться (dev)
+                      </Button>
                     </div>
                   </li>
                 );
