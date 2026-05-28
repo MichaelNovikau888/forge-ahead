@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
 import { myBookingsQuery } from "@/lib/queries";
+import { createMeetingForBooking } from "@/lib/daily.functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,14 +20,16 @@ function ClientDashboard() {
   const { user } = useAuth();
   const { data: bookings } = useQuery({ ...myBookingsQuery(user?.id ?? ""), enabled: !!user });
   const qc = useQueryClient();
+  const createMeeting = useServerFn(createMeetingForBooking);
 
   const pay = useMutation({
     mutationFn: async (id: string) => {
       // MVP: эмуляция оплаты. Реальная интеграция Stripe — следующим шагом.
-      const meeting = `https://meet.fitmatch.app/room/${id.slice(0, 8)}`;
+      // Создаём настоящую комнату Daily.co
+      const { url } = await createMeeting({ data: { bookingId: id } });
       const { error } = await supabase
         .from("bookings")
-        .update({ payment_status: "paid", status: "confirmed", meeting_url: meeting })
+        .update({ payment_status: "paid", status: "confirmed", meeting_url: url })
         .eq("id", id);
       if (error) throw error;
     },
