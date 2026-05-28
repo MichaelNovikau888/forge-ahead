@@ -3,14 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 type ProfileLite = { id: string; full_name: string | null; avatar_url?: string | null; bio?: string | null };
 
-async function loadProfiles(ids: string[], fields = "id, full_name, avatar_url, bio") {
+async function loadProfiles(ids: string[], fields: "id, full_name" | "id, full_name, avatar_url, bio" = "id, full_name, avatar_url, bio") {
   const uniqueIds = [...new Set(ids.filter(Boolean))];
   if (uniqueIds.length === 0) return new Map<string, ProfileLite>();
 
   const { data, error } = await supabase.from("profiles").select(fields).in("id", uniqueIds);
   if (error) return new Map<string, ProfileLite>();
 
-  return new Map((data ?? []).map((profile) => [profile.id, profile as ProfileLite]));
+  const profiles = (data ?? []) as unknown as ProfileLite[];
+  return new Map(profiles.map((profile) => [profile.id, profile]));
 }
 
 export const trainersQuery = queryOptions({
