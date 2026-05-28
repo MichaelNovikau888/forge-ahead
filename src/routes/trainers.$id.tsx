@@ -26,7 +26,7 @@ function TrainerProfile() {
       const [trainerRes, servicesRes, slotsRes] = await Promise.all([
         supabase
           .from("trainers")
-          .select("user_id, specialization, experience_years, price_per_hour, rating, is_approved, profiles(full_name, avatar_url, bio)")
+          .select("user_id, specialization, experience_years, price_per_hour, rating, is_approved")
           .eq("user_id", id)
           .maybeSingle(),
         supabase.from("services").select("id, title, description, price, duration_min").eq("trainer_id", id).order("price"),
@@ -39,8 +39,14 @@ function TrainerProfile() {
           .order("start_at"),
       ]);
       if (trainerRes.error) throw trainerRes.error;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, bio")
+        .eq("id", id)
+        .maybeSingle();
       return {
         trainer: trainerRes.data,
+        profile,
         services: servicesRes.data ?? [],
         slots: slotsRes.data ?? [],
       };
@@ -52,7 +58,7 @@ function TrainerProfile() {
     navigate({ to: "/booking", search: { trainerId: id, serviceId } });
   };
 
-  const profile = Array.isArray(data?.trainer?.profiles) ? data?.trainer?.profiles[0] : data?.trainer?.profiles;
+  const profile = data?.profile;
   const name = profile?.full_name ?? "Тренер";
 
   return (
