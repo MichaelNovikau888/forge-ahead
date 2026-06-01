@@ -11,6 +11,7 @@ interface AuthCtx {
   session: Session | null;
   roles: AppRole[];
   loading: boolean;
+  rolesLoading: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesLoading, setRolesLoading] = useState(true);
   const router = useRouter();
   const qc = useQueryClient();
 
@@ -29,13 +31,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        setRolesLoading(true);
         setTimeout(() => {
           supabase.from("user_roles").select("role").eq("user_id", s.user.id).then(({ data }) => {
             setRoles((data ?? []).map((r) => r.role as AppRole));
+            setRolesLoading(false);
           });
         }, 0);
       } else {
         setRoles([]);
+        setRolesLoading(false);
       }
       router.invalidate();
       qc.invalidateQueries();
@@ -44,9 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        setRolesLoading(true);
         supabase.from("user_roles").select("role").eq("user_id", s.user.id).then(({ data }) => {
           setRoles((data ?? []).map((r) => r.role as AppRole));
+          setRolesLoading(false);
         });
+      } else {
+        setRolesLoading(false);
       }
       setLoading(false);
     });
@@ -57,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  return <Ctx.Provider value={{ user, session, roles, loading, signOut }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, session, roles, loading, rolesLoading, signOut }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
