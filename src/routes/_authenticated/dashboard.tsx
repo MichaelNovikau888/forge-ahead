@@ -21,7 +21,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function ClientDashboard() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+  const isAdmin = roles.includes("admin");
   const { data: bookings } = useQuery({ ...myBookingsQuery(user?.id ?? ""), enabled: !!user });
   const { data: trainers } = useQuery(trainersQuery);
   const qc = useQueryClient();
@@ -118,8 +119,10 @@ function ClientDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Кабинет клиента</h1>
-        <p className="text-muted-foreground">Твои тренировки и история.</p>
+        <h1 className="text-3xl font-bold">{isAdmin ? "Кабинет администратора" : "Кабинет клиента"}</h1>
+        <p className="text-muted-foreground">
+          {isAdmin ? "Управление платформой и сводка." : "Твои тренировки и история."}
+        </p>
       </div>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
