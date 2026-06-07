@@ -32,13 +32,15 @@ function ClientDashboard() {
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: base, error: baseErr } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, phone, telegram, whatsapp")
+        .select("id, full_name, avatar_url")
         .eq("id", user!.id)
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (baseErr) throw baseErr;
+      const { data: contact } = await supabase.rpc("get_profile_contact", { _user_id: user!.id });
+      const c = Array.isArray(contact) ? contact[0] : contact;
+      return { ...(base ?? {}), phone: c?.phone ?? null, telegram: c?.telegram ?? null, whatsapp: c?.whatsapp ?? null };
     },
   });
 
