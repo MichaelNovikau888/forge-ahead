@@ -250,6 +250,14 @@ export type Database = {
         Args: { _approved: boolean; _trainer_user_id: string }
         Returns: undefined
       }
+      get_profile_contact: {
+        Args: { _user_id: string }
+        Returns: {
+          phone: string
+          telegram: string
+          whatsapp: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
