@@ -436,3 +436,32 @@ bun run build
 
 **Итог:** 9 security findings → 0 remaining. Security agent подтвердил все исправления.
 
+
+---
+
+## Изменения от 10 июня 2026 — Vercel deployment fix
+
+**Проблема:** Сайт на https://forge-ahead-ten.vercel.app возвращал `404 NOT_FOUND` на всех роутах. Причина — `@lovable.dev/vite-tanstack-config` по умолчанию собирает проект под Cloudflare Workers (`cloudflare-module` preset), а Vercel такой бандл обслуживать не умеет.
+
+**Исправления:**
+
+1. **`vite.config.ts`** — добавлен явный nitro override:
+   ```ts
+   export default defineConfig({
+     nitro: { preset: "vercel" },
+   });
+   ```
+   Согласно типам `@lovable.dev/vite-tanstack-config@2.3.1`, внутри Lovable-сборки (sandbox/prod-deploy) preset форсится в Cloudflare независимо от этого значения, поэтому **превью Lovable не ломается**. Override срабатывает только в внешней CI (Vercel), где nitro строит `.vercel/output/` по Build Output API v3.
+
+2. **`vercel.json`** (новый файл):
+   ```json
+   {
+     "buildCommand": "bun run build",
+     "framework": null
+   }
+   ```
+   `framework: null` отключает автодетект Vercel (он иначе пытается применить preset под Vite SPA), а `.vercel/output/` подхватывается автоматически.
+
+3. **`wrangler.jsonc`** оставлен без изменений — нужен для внутреннего превью Lovable.
+
+**Все security-фиксы от 09 июня 2026 сохранены без изменений.**
