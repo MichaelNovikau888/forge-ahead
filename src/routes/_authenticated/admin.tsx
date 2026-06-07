@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { allTrainersQuery, allBookingsQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,18 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель — FitMatch" }] }),
+  beforeLoad: async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) throw redirect({ to: "/auth" });
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!data) throw redirect({ to: "/dashboard" });
+  },
   component: AdminDashboard,
 });
 
@@ -22,7 +34,10 @@ function AdminDashboard() {
 
   const toggleApprove = useMutation({
     mutationFn: async ({ id, is_approved }: { id: string; is_approved: boolean }) => {
-      const { error } = await supabase.from("trainers").update({ is_approved }).eq("user_id", id);
+      const { error } = await supabase.rpc("admin_set_trainer_approved", {
+        _trainer_user_id: id,
+        _approved: is_approved,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
