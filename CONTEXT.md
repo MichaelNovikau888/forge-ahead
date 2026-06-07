@@ -388,3 +388,51 @@ bun run build
   - `admin` → «Кабинет администратора» / «Управление платформой и сводка.»
   - иначе → «Кабинет клиента» / «Твои тренировки и история.»
 - Используется `roles` из `useAuth()`.
+
+## Изменения от 09 июня 2026
+
+### Security: закрытие уязвимостей по результатам сканирования
+Выполнено комплексное усиление безопасности backend и frontend после автоматического security-сканирования.
+
+#### 1. Database — защита личных контактов в `profiles`
+- **Проблема:** Поля `phone`, `telegram`, `whatsapp` были доступны всем authenticated-пользователям через прямой SELECT.
+- **Решение:**
+  - `profiles` SELECT теперь возвращает только public-поля: `id, full_name, avatar_url`.
+  - Контактные данные доступны только через RPC `get_profile_contact(_user_id)`:
+    - Возвращает данные, если `auth.uid() = _user_id` **или** вызывающий — `admin`.
+    - Функция — `SECURITY DEFINER`.
+  - На клиенте `dashboard.tsx` теперь делает два запроса: базовый SELECT + RPC `get_profile_contact`, объединяя результаты.
+
+#### 2. Database — защита поля `is_approved` в `trainers`
+- **Проблема:** Прямой UPDATE `is_approved` из клиентского кода теоретически обходил RLS.
+- **Решение:**
+  - Добавлен `BEFORE UPDATE` trigger `protect_trainer_approval_trg` на `trainers`:
+    - Если `is_approved` меняется — проверяет `has_role(auth.uid(), \`admin\`)`.
+    - Не-админ получает ошибку `Only admins can change trainer approval status`.
+  - Админ-панель (`admin.tsx`) больше не делает прямой UPDATE, а вызывает RPC `admin_set_trainer_approved(_trainer_user_id, _approved)`.
+
+#### 3. Database — ограничение прав тренеров на `bookings`
+- **Проблема:** Тренер мог менять любые поля бронирования (цена, клиент, время и т.д.).
+- **Решение:**
+  - Добавлен `BEFORE UPDATE` trigger `enforce_trainer_booking_update` на `bookings`:
+    - Если `auth.uid() = trainer_id` (и не клиент, не админ) — разрешено менять **только** `status` и `meeting_url`.
+    - Изменение любого другого поля вызывает ошибку `Trainers may only update status and meeting_url`.
+
+#### 4. Database — revoke execute на SECURITY DEFINER функциях
+- **Проблема:** `SECURITY DEFINER` функции (`has_role`, `admin_set_trainer_approved`, `get_profile_contact`, `handle_new_user`, `set_updated_at`, `enforce_client_booking_update`, `sync_slot_booked`, `protect_trainer_approval`) были callable для `anon`/`PUBLIC`.
+- **Решение:**
+  - `REVOKE EXECUTE ON FUNCTION ... FROM anon, PUBLIC` для всех перечисленных функций.
+  - `has_role`, `admin_set_trainer_approved`, `get_profile_contact` — оставлены для `authenticated` (необходимы для RLS + RPC).
+  - Остальные — только для `service_role`.
+
+#### 5. Auth — HIBP проверка паролей
+- Включена проверка паролей по базе утечек Have I Been Pwned (`password_hibp_enabled: true`).
+
+#### 6. Frontend — дополнительная защита админ-роута
+- `src/routes/_authenticated/admin.tsx`:
+  - Добавлен `beforeLoad` guard: проверяет `user_roles.role = \`admin\`` **до** рендера.
+  - Если нет admin-роли — редирект на `/dashboard`.
+  - `toggleApprove` мутация использует `supabase.rpc(\`admin_set_trainer_approved\`, ...)` вместо прямого UPDATE.
+
+**Итог:** 9 security findings → 0 remaining. Security agent подтвердил все исправления.
+
