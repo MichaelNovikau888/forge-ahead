@@ -465,3 +465,52 @@ bun run build
 3. **`wrangler.jsonc`** оставлен без изменений — нужен для внутреннего превью Lovable.
 
 **Все security-фиксы от 09 июня 2026 сохранены без изменений.**
+
+---
+
+## Изменения от 09 июня 2026 (часть 2) — Security re-scan fixes
+
+Повторный security-скан выявил оставшиеся проблемы; все исправлены одной миграцией.
+
+### 1. Эскалация привилегий через signup-metadata (`handle_new_user`)
+Триггер `handle_new_user` слепо принимал любое значение `raw_user_meta_data->>'role'`, что позволяло любому пользователю при регистрации указать `role: 'admin'` и получить админ-права (SECURITY DEFINER обходил RLS на `user_roles`).
+**Фикс:** в `handle_new_user` добавлен whitelist:
+```sql
+_role := CASE
+  WHEN _requested = 'trainer' THEN 'trainer'::app_role
+  ELSE 'client'::app_role
+END;
+```
+Роль `admin` теперь нельзя назначить через signup — только через миграцию или admin-only RPC.
+
+### 2. Контактные поля `profiles` (phone/telegram/whatsapp) видны всем authenticated
+RLS-политика `Public profile fields viewable by authenticated` (`USING true`) разрешала чтение всех колонок, включая контакты.
+**Фикс:** добавлены column-level GRANTs:
+```sql
+REVOKE SELECT ON public.profiles FROM anon, authenticated;
+GRANT SELECT (id, full_name, avatar_url, bio, created_at, updated_at) ON public.profiles TO authenticated;
+GRANT SELECT (id, full_name, avatar_url, bio) ON public.profiles TO anon;
+```
+Контакты (`phone, telegram, whatsapp`) больше нельзя выбрать напрямую — только через уже существующую SECURITY DEFINER функцию `get_profile_contact(_user_id)` (которая проверяет владельца или админа). Dashboard уже использует этот RPC, поэтому frontend менять не пришлось.
+
+### 3. Клиент задаёт цену бронирования (`bookings.amount`)
+В `booking.tsx` поле `amount` вычислялось на клиенте и вставлялось напрямую — клиент мог отправить любое значение, в т.ч. 0.
+**Фикс:** новая функция `enforce_booking_amount()` + `BEFORE INSERT` триггер `enforce_booking_amount_ins` на `bookings`. Триггер:
+- если `service_id` задан — берёт `amount` из `services.price`;
+- иначе устанавливает `amount = 0`;
+- админы освобождены от перезаписи (для ручных корректировок).
+
+Клиентский код не менялся — значение, отправленное с фронта, просто игнорируется на стороне сервера.
+
+### 4. Уже исправленные ранее находки (повторно подтверждены)
+- `trainers.is_approved` защищён триггером `protect_trainer_approval_trg` — без admin-роли изменить нельзя.
+- `bookings` UPDATE тренером ограничен триггером `enforce_trainer_booking_update` (только `status` и `meeting_url`).
+
+### 5. Linter warning: SECURITY DEFINER executable by authenticated
+Linter флагует функции `has_role`, `admin_set_trainer_approved`, `get_profile_contact` как доступные для `authenticated`. Это **намеренно**:
+- `has_role` используется внутри RLS-политик, должна быть вызываемой;
+- `admin_set_trainer_approved` сама проверяет `has_role(..., 'admin')` внутри;
+- `get_profile_contact` сама проверяет `auth.uid() = _user_id OR admin` внутри.
+Доступ для `anon` и `PUBLIC` уже revoked. Warnings помечены как ignored с пояснением.
+
+**Итог:** 4 уязвимости устранены кодом/миграцией, 3 linter warnings задокументированы как accepted-by-design.
