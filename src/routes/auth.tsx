@@ -76,7 +76,7 @@ function AuthPage() {
 
   const onSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email"));
     const password = String(fd.get("password"));
