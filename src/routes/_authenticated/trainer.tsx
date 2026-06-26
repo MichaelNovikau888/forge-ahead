@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { createMeetingForBooking } from "@/lib/daily.functions";
+import { Video } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/trainer")({
   head: () => ({ meta: [{ title: "Кабинет тренера — FitMatch" }] }),
@@ -17,6 +20,19 @@ function TrainerDashboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: bookings } = useQuery({ ...trainerBookingsQuery(user?.id ?? ""), enabled: !!user });
+  const createMeeting = useServerFn(createMeetingForBooking);
+
+  const joinDev = useMutation({
+    mutationFn: async (id: string) => {
+      const { url } = await createMeeting({ data: { bookingId: id } });
+      return url;
+    },
+    onSuccess: (url) => {
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      window.open(url, "_blank");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: "confirmed" | "completed" | "cancelled" }) => {
@@ -56,6 +72,17 @@ function TrainerDashboard() {
                       <p className="text-sm text-muted-foreground">{new Date(b.scheduled_at).toLocaleString("ru-RU")}</p>
                     </div>
                     <Badge variant="secondary">{b.status}</Badge>
+                    {b.meeting_url ? (
+                      <a href={b.meeting_url} target="_blank" rel="noreferrer">
+                        <Button size="sm" variant="secondary"><Video className="h-4 w-4 mr-1" /> Подключиться</Button>
+                      </a>
+                    ) : (
+                      b.status !== "cancelled" && (
+                        <Button size="sm" variant="secondary" onClick={() => joinDev.mutate(b.id)} disabled={joinDev.isPending}>
+                          <Video className="h-4 w-4 mr-1" /> Подключиться (dev)
+                        </Button>
+                      )
+                    )}
                     {b.status === "pending" && (
                       <>
                         <Button size="sm" onClick={() => updateStatus.mutate({ id: b.id, status: "confirmed" })}>Подтвердить</Button>
