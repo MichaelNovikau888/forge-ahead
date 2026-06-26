@@ -65,7 +65,7 @@ export const trainerBookingsQuery = (trainerId: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("id, scheduled_at, status, notes, client_id")
+        .select("id, scheduled_at, status, notes, client_id, meeting_url, payment_status")
         .eq("trainer_id", trainerId)
         .order("scheduled_at", { ascending: false });
       if (error) throw error;
