@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,13 +22,14 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function ClientDashboard() {
   const { user, roles } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = roles.includes("admin");
   const isTrainer = roles.includes("trainer");
   useEffect(() => {
     if (isTrainer && !isAdmin) {
-      window.location.replace("/trainer");
+      navigate({ to: "/trainer", replace: true });
     }
-  }, [isTrainer, isAdmin]);
+  }, [isTrainer, isAdmin, navigate]);
   const { data: bookings } = useQuery({ ...myBookingsQuery(user?.id ?? ""), enabled: !!user });
   const { data: trainers } = useQuery(trainersQuery);
   const qc = useQueryClient();
