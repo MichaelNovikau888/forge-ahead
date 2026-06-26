@@ -534,3 +534,15 @@ Linter флагует функции `has_role`, `admin_set_trainer_approved`, `
 Остальные настройки auth сохранены: `disable_signup=false`, `external_anonymous_users_enabled=false`, `password_hibp_enabled=true` (проверка пароля по базе утечек активна).
 
 Чтобы вернуть обязательное подтверждение перед продом — выставить `auto_confirm_email=false` в Cloud → Users → Auth Settings.
+
+## Маршрутизация по роли после входа (фикс)
+
+Симптом: тренер (например, Марсель Пруст, 994@mail.com — роль `trainer` в БД корректна) после входа попадал на `/dashboard` с заголовком «Кабинет клиента», хотя в каталоге значился как тренер.
+
+Причина: `auth.tsx` после `signIn` всегда редиректил на `/dashboard` независимо от роли.
+
+Исправления:
+- `src/routes/auth.tsx`: после успешного `signInWithPassword` читаем `user_roles`; если у пользователя есть роль `trainer` и нет `admin`, редирект на `/trainer`, иначе на `/dashboard`.
+- `src/routes/_authenticated/dashboard.tsx`: добавлен страховочный `useEffect`, который при заходе тренера (без роли админа) на `/dashboard` мгновенно перенаправляет на `/trainer` через `navigate({ to: "/trainer", replace: true })`.
+
+Админ по-прежнему видит «Кабинет администратора» на `/dashboard`.
