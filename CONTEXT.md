@@ -526,3 +526,11 @@ Linter флагует функции `has_role`, `admin_set_trainer_approved`, `
 3. **`src/lib/queries.ts`** — `trainerBookingsQuery` теперь выбирает `meeting_url, payment_status` (нужно для рендера кнопки).
 
 Сама server function `createMeetingForBooking` оплату не требует и не проверяет — это уже dev-friendly. Ничего в политиках RLS/оплате не менялось; кнопка «Оплатить» у клиента осталась рабочей. Чтобы вернуть обязательную оплату, удалить dev-ветки `joinDev`/`createDevBooking` в dashboard.tsx и trainer.tsx.
+
+## Изменения от 26 июня 2026 — Отключено подтверждение email
+
+По запросу: для быстрого тестирования регистраций (новые клиенты/тренеры) включён `auto_confirm_email = true` в настройках Supabase Auth. Новые пользователи теперь сразу авторизованы после `signUp` без письма-подтверждения.
+
+Остальные настройки auth сохранены: `disable_signup=false`, `external_anonymous_users_enabled=false`, `password_hibp_enabled=true` (проверка пароля по базе утечек активна).
+
+Чтобы вернуть обязательное подтверждение перед продом — выставить `auto_confirm_email=false` в Cloud → Users → Auth Settings.
