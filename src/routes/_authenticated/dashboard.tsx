@@ -21,15 +21,15 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function ClientDashboard() {
-  const { user, roles } = useAuth();
+  const { user, roles, loading, rolesLoading } = useAuth();
   const navigate = useNavigate();
   const isAdmin = roles.includes("admin");
   const isTrainer = roles.includes("trainer");
   useEffect(() => {
-    if (isTrainer && !isAdmin) {
+    if (!loading && !rolesLoading && isTrainer && !isAdmin) {
       navigate({ to: "/trainer", replace: true });
     }
-  }, [isTrainer, isAdmin, navigate]);
+  }, [loading, rolesLoading, isTrainer, isAdmin, navigate]);
   const { data: bookings } = useQuery({ ...myBookingsQuery(user?.id ?? ""), enabled: !!user });
   const { data: trainers } = useQuery(trainersQuery);
   const qc = useQueryClient();
@@ -124,6 +124,17 @@ function ClientDashboard() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  if (loading || rolesLoading || (isTrainer && !isAdmin)) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Загрузка кабинета…</h1>
+          <p className="text-muted-foreground">Проверяем роль аккаунта.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
