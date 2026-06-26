@@ -40,27 +40,27 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { user, roles, loading, rolesLoading } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { user, roles, loading: authLoading, rolesLoading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const [role, setRole] = useState<"client" | "trainer">("client");
 
   useEffect(() => {
-    if (!user || loading || rolesLoading) return;
+    if (!user || authLoading || rolesLoading) return;
     navigate({
       to: roles.includes("admin") ? "/admin" : roles.includes("trainer") ? "/trainer" : "/dashboard",
       replace: true,
     });
-  }, [user, roles, loading, rolesLoading, navigate]);
+  }, [user, roles, authLoading, rolesLoading, navigate]);
 
   const onSignIn = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     const fd = new FormData(e.currentTarget);
     const { error } = await supabase.auth.signInWithPassword({
       email: String(fd.get("email")),
       password: String(fd.get("password")),
     });
-    setLoading(false);
+    setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Добро пожаловать!");
     const { data: userData } = await supabase.auth.getUser();
@@ -90,10 +90,10 @@ function AuthPage() {
       },
     });
     if (error) {
-      setLoading(false);
+      setSubmitting(false);
       return toast.error(error.message);
     }
-    setLoading(false);
+    setSubmitting(false);
     toast.success("Аккаунт создан!");
     navigate({ to: role === "trainer" ? "/trainer" : "/dashboard" });
   };
@@ -121,7 +121,7 @@ function AuthPage() {
                   <Label htmlFor="signin-password">Пароль</Label>
                   <PasswordInput id="signin-password" name="password" />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>Войти</Button>
+                <Button type="submit" className="w-full" disabled={submitting}>Войти</Button>
               </form>
             </TabsContent>
             <TabsContent value="signup">
@@ -152,7 +152,7 @@ function AuthPage() {
                   </RadioGroup>
                   <p className="text-xs text-muted-foreground">Выбрано: <span className="font-medium">{role === "trainer" ? "Тренер" : "Клиент"}</span></p>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>Создать аккаунт</Button>
+                <Button type="submit" className="w-full" disabled={submitting}>Создать аккаунт</Button>
               </form>
             </TabsContent>
           </Tabs>
