@@ -59,7 +59,15 @@ function AuthPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Добро пожаловать!");
-    navigate({ to: "/dashboard" });
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    let target: "/trainer" | "/dashboard" = "/dashboard";
+    if (uid) {
+      const { data: rolesData } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+      const roles = (rolesData ?? []).map((r) => r.role);
+      if (roles.includes("trainer") && !roles.includes("admin")) target = "/trainer";
+    }
+    navigate({ to: target });
   };
 
   const onSignUp = async (e: FormEvent<HTMLFormElement>) => {
