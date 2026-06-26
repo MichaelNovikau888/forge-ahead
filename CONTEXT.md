@@ -514,3 +514,15 @@ Linter флагует функции `has_role`, `admin_set_trainer_approved`, `
 Доступ для `anon` и `PUBLIC` уже revoked. Warnings помечены как ignored с пояснением.
 
 **Итог:** 4 уязвимости устранены кодом/миграцией, 3 linter warnings задокументированы как accepted-by-design.
+
+## Изменения от 26 июня 2026 — Тестовый режим Daily.co (без оплаты)
+
+Для отладки видеосвязи временно разрешено создавать комнаты Daily.co без оплаты с обеих сторон:
+
+1. **Клиент (`src/routes/_authenticated/dashboard.tsx`)** — уже была кнопка «Подключиться (dev)», создающая комнату через `createMeetingForBooking` без оплаты. Оставлена без изменений.
+2. **Тренер (`src/routes/_authenticated/trainer.tsx`)** — добавлена аналогичная кнопка «Подключиться»/«Подключиться (dev)» для каждой брони:
+   - если `meeting_url` уже создан клиентом — открывает существующую комнату;
+   - иначе вызывает `createMeetingForBooking` (server fn, защищена `requireSupabaseAuth`, доступ только участникам брони) и открывает новую.
+3. **`src/lib/queries.ts`** — `trainerBookingsQuery` теперь выбирает `meeting_url, payment_status` (нужно для рендера кнопки).
+
+Сама server function `createMeetingForBooking` оплату не требует и не проверяет — это уже dev-friendly. Ничего в политиках RLS/оплате не менялось; кнопка «Оплатить» у клиента осталась рабочей. Чтобы вернуть обязательную оплату, удалить dev-ветки `joinDev`/`createDevBooking` в dashboard.tsx и trainer.tsx.
