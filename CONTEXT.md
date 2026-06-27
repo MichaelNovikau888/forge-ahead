@@ -557,3 +557,10 @@ Linter флагует функции `has_role`, `admin_set_trainer_approved`, `
 Дополнительно устранена UI-гонка:
 - `src/routes/auth.tsx`: если уже авторизованный пользователь попадает на `/auth`, редирект теперь ждёт загрузки ролей и ведёт тренера на `/trainer`, админа на `/admin`, клиента на `/dashboard`;
 - `src/routes/_authenticated/dashboard.tsx`: пока роли загружаются, клиентский заголовок больше не показывается; тренер без admin-роли сразу перенаправляется в «Кабинет тренера».
+
+## Fix: env-переменные превью + редактор профиля тренера
+
+- `vite.config.ts` сброшен на дефолт (`defineConfig({})`). Пресет `vercel` ломал инжект env-переменных в Lovable Worker → ошибка «Missing Supabase Environment Variables» при создании Daily.co комнаты.
+- В `src/lib/daily.functions.ts` импорт `supabaseAdmin` перенесён внутрь `.handler()` (`await import(...)`) — соответствие правилам TanStack import-graph.
+- Миграция: `ALTER TABLE public.trainers ADD COLUMN bio text` — для «О себе» тренера.
+- В `/trainer` добавлена карточка «Профиль тренера» с редактированием: специализация, тариф (₽/час), опыт, био. Бейдж статуса (Одобрен / На модерации).
