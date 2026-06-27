@@ -1,11 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { trainerBookingsQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createMeetingForBooking } from "@/lib/daily.functions";
@@ -21,6 +25,47 @@ function TrainerDashboard() {
   const qc = useQueryClient();
   const { data: bookings } = useQuery({ ...trainerBookingsQuery(user?.id ?? ""), enabled: !!user });
   const createMeeting = useServerFn(createMeetingForBooking);
+
+  const { data: trainerProfile } = useQuery({
+    queryKey: ["trainer-profile", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("trainers")
+        .select("specialization, experience_years, price_per_hour, bio, is_approved")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ specialization: "", experience_years: 0, price_per_hour: 0, bio: "" });
+  useEffect(() => {
+    if (trainerProfile) {
+      setForm({
+        specialization: trainerProfile.specialization ?? "",
+        experience_years: Number(trainerProfile.experience_years ?? 0),
+        price_per_hour: Number(trainerProfile.price_per_hour ?? 0),
+        bio: trainerProfile.bio ?? "",
+      });
+    }
+  }, [trainerProfile]);
+
+  const saveTrainer = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("trainers").update(form).eq("user_id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["trainer-profile", user?.id] });
+      qc.invalidateQueries({ queryKey: ["trainers"] });
+      setEditing(false);
+      toast.success("Профиль обновлён");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const joinDev = useMutation({
     mutationFn: async (id: string) => {
@@ -56,6 +101,51 @@ function TrainerDashboard() {
         <Link to="/trainer/services"><Button variant="outline">Мои услуги</Button></Link>
         <Link to="/trainer/schedule"><Button variant="outline">Расписание</Button></Link>
       </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Профиль тренера</CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant={trainerProfile?.is_approved ? "default" : "secondary"}>
+              {trainerProfile?.is_approved ? "Одобрен" : "На модерации"}
+            </Badge>
+            <Button size="sm" variant="outline" onClick={() => setEditing((v) => !v)}>
+              {editing ? "Отмена" : "Редактировать"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!editing ? (
+            <div className="grid gap-2 sm:grid-cols-2 text-sm">
+              <div><span className="text-muted-foreground">Специализация:</span> {trainerProfile?.specialization || "—"}</div>
+              <div><span className="text-muted-foreground">Тариф:</span> {trainerProfile?.price_per_hour ?? 0} ₽/час</div>
+              <div><span className="text-muted-foreground">Опыт:</span> {trainerProfile?.experience_years ?? 0} лет</div>
+              <div className="sm:col-span-2"><span className="text-muted-foreground">О себе:</span> {trainerProfile?.bio || "—"}</div>
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label>Специализация</Label>
+                <Input value={form.specialization} onChange={(e) => setForm({ ...form, specialization: e.target.value })} />
+              </div>
+              <div>
+                <Label>Тариф (₽ / час)</Label>
+                <Input type="number" min={0} step={100} value={form.price_per_hour} onChange={(e) => setForm({ ...form, price_per_hour: Number(e.target.value) })} />
+              </div>
+              <div>
+                <Label>Опыт (лет)</Label>
+                <Input type="number" min={0} step={1} value={form.experience_years} onChange={(e) => setForm({ ...form, experience_years: Number(e.target.value) })} />
+              </div>
+              <div className="sm:col-span-2">
+                <Label>О себе</Label>
+                <Textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
+              </div>
+              <div className="sm:col-span-2">
+                <Button onClick={() => saveTrainer.mutate()} disabled={saveTrainer.isPending}>Сохранить</Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader><CardTitle>Заявки клиентов</CardTitle></CardHeader>
         <CardContent>

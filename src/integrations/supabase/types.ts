@@ -192,6 +192,7 @@ export type Database = {
       }
       trainers: {
         Row: {
+          bio: string | null
           created_at: string
           experience_years: number
           is_approved: boolean
@@ -201,6 +202,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bio?: string | null
           created_at?: string
           experience_years?: number
           is_approved?: boolean
@@ -210,6 +212,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bio?: string | null
           created_at?: string
           experience_years?: number
           is_approved?: boolean
