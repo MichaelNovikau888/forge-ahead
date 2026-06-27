@@ -6,13 +6,4 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// Inside Lovable's sandbox/prod-deploy build the nitro preset is forced to
-// Cloudflare regardless of what we pass here, so this override only takes
-// effect when building outside Lovable (e.g. on Vercel CI from the linked
-// GitHub repo). This keeps the Lovable preview working while producing a
-// Vercel-compatible build output on Vercel.
-export default defineConfig({
-  nitro: {
-    preset: "vercel",
-  },
-});
+export default defineConfig({});

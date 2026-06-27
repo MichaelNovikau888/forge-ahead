@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const createMeetingForBooking = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -10,6 +9,7 @@ export const createMeetingForBooking = createServerFn({ method: "POST" })
     const { userId } = context;
     const apiKey = process.env.DAILY_API_KEY;
     if (!apiKey) throw new Error("DAILY_API_KEY не настроен");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Получаем бронирование (через admin, проверяя доступ вручную)
     const { data: booking, error } = await supabaseAdmin
