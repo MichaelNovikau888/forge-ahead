@@ -35,22 +35,30 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Войди в FitMatch или создай аккаунт клиента / тренера." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
+  }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const { user, roles, loading: authLoading, rolesLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [role, setRole] = useState<"client" | "trainer">("client");
 
   useEffect(() => {
     if (!user || authLoading || rolesLoading) return;
+    if (next) {
+      window.location.href = next;
+      return;
+    }
     navigate({
       to: roles.includes("admin") ? "/admin" : roles.includes("trainer") ? "/trainer" : "/dashboard",
       replace: true,
     });
-  }, [user, roles, authLoading, rolesLoading, navigate]);
+  }, [user, roles, authLoading, rolesLoading, navigate, next]);
 
   const onSignIn = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,6 +71,7 @@ function AuthPage() {
     setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Добро пожаловать!");
+    if (next) { window.location.href = next; return; }
     const { data: userData } = await supabase.auth.getUser();
     const uid = userData.user?.id;
     let target: "/trainer" | "/dashboard" = "/dashboard";
@@ -81,11 +90,14 @@ function AuthPage() {
     const email = String(fd.get("email"));
     const password = String(fd.get("password"));
     const fullName = String(fd.get("full_name"));
+    const emailRedirectTo = next
+      ? `${window.location.origin}${next}`
+      : `${window.location.origin}/dashboard`;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo,
         data: { full_name: fullName, role },
       },
     });
@@ -95,6 +107,7 @@ function AuthPage() {
     }
     setSubmitting(false);
     toast.success("Аккаунт создан!");
+    if (next) { window.location.href = next; return; }
     navigate({ to: role === "trainer" ? "/trainer" : "/dashboard" });
   };
 
