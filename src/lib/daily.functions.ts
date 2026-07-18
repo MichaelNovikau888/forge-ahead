@@ -23,8 +23,11 @@ export const createMeetingForBooking = createServerFn({ method: "POST" })
     }
     if (booking.meeting_url) return { url: booking.meeting_url };
 
-    // Комната истекает через 4 часа после начала тренировки
-    const exp = Math.floor(new Date(booking.scheduled_at).getTime() / 1000) + 4 * 60 * 60;
+    // Комната истекает через 4 часа после начала тренировки,
+    // но не раньше чем через час от текущего момента (иначе Daily отклонит).
+    const nowSec = Math.floor(Date.now() / 1000);
+    const scheduledSec = Math.floor(new Date(booking.scheduled_at).getTime() / 1000);
+    const exp = Math.max(nowSec + 60 * 60, scheduledSec + 4 * 60 * 60);
     const roomName = `fm-${booking.id.slice(0, 8)}-${Date.now().toString(36)}`;
 
     const res = await fetch("https://api.daily.co/v1/rooms", {
@@ -36,11 +39,19 @@ export const createMeetingForBooking = createServerFn({ method: "POST" })
       body: JSON.stringify({
         name: roomName,
         privacy: "public",
-        properties: { exp, enable_chat: true, enable_screenshare: true },
+        properties: {
+          exp,
+          enable_chat: true,
+          enable_screenshare: true,
+          enable_prejoin_ui: true,
+          start_video_off: false,
+          start_audio_off: false,
+        },
       }),
     });
     if (!res.ok) {
       const text = await res.text();
+      console.error("Daily API error", res.status, text);
       throw new Error(`Daily API ${res.status}: ${text}`);
     }
     const room = (await res.json()) as { url: string };
