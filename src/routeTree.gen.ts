@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrainersRouteImport } from './routes/trainers'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,12 +19,20 @@ import { Route as AuthenticatedTrainerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBookingRouteImport } from './routes/_authenticated/booking'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedTrainerServicesRouteImport } from './routes/_authenticated/trainer.services'
 import { Route as AuthenticatedTrainerScheduleRouteImport } from './routes/_authenticated/trainer.schedule'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
 const TrainersRoute = TrainersRouteImport.update({
   id: '/trainers',
   path: '/trainers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -65,6 +74,18 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedTrainerServicesRoute =
   AuthenticatedTrainerServicesRouteImport.update({
     id: '/services',
@@ -77,28 +98,42 @@ const AuthenticatedTrainerScheduleRoute =
     path: '/schedule',
     getParentRoute: () => AuthenticatedTrainerRoute,
   } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
   '/trainers': typeof TrainersRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trainer': typeof AuthenticatedTrainerRouteWithChildren
   '/trainers/$id': typeof TrainersIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
   '/trainers': typeof TrainersRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/booking': typeof AuthenticatedBookingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/trainer': typeof AuthenticatedTrainerRouteWithChildren
   '/trainers/$id': typeof TrainersIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
@@ -107,12 +142,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
   '/trainers': typeof TrainersRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/booking': typeof AuthenticatedBookingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/trainer': typeof AuthenticatedTrainerRouteWithChildren
   '/trainers/$id': typeof TrainersIdRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/trainer/schedule': typeof AuthenticatedTrainerScheduleRoute
   '/_authenticated/trainer/services': typeof AuthenticatedTrainerServicesRoute
 }
@@ -121,24 +160,32 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/mcp'
     | '/trainers'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/booking'
     | '/dashboard'
     | '/trainer'
     | '/trainers/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/trainer/schedule'
     | '/trainer/services'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/mcp'
     | '/trainers'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/booking'
     | '/dashboard'
     | '/trainer'
     | '/trainers/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/trainer/schedule'
     | '/trainer/services'
   id:
@@ -146,12 +193,16 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/mcp'
     | '/trainers'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/booking'
     | '/_authenticated/dashboard'
     | '/_authenticated/trainer'
     | '/trainers/$id'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/trainer/schedule'
     | '/_authenticated/trainer/services'
   fileRoutesById: FileRoutesById
@@ -160,7 +211,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
   TrainersRoute: typeof TrainersRouteWithChildren
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -170,6 +225,13 @@ declare module '@tanstack/react-router' {
       path: '/trainers'
       fullPath: '/trainers'
       preLoaderRoute: typeof TrainersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -228,6 +290,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/trainer/services': {
       id: '/_authenticated/trainer/services'
       path: '/services'
@@ -241,6 +317,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/trainer/schedule'
       preLoaderRoute: typeof AuthenticatedTrainerScheduleRouteImport
       parentRoute: typeof AuthenticatedTrainerRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -292,7 +375,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
   TrainersRoute: TrainersRouteWithChildren,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
